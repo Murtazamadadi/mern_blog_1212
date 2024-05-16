@@ -10,6 +10,7 @@ import {
 } from '../redux/user/userSlicer';
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
+import OAuth from '../components/Oauth';
 
 export default function SignUp() {
   const [formData, setFormData] = useState({});
@@ -102,6 +103,7 @@ export default function SignUp() {
                 'وارید'
               )}
             </Button>
+            <OAuth/>
           </form>
           <div className='flex gap-2 text-sm mt-5'>
             <span>اگرحساب کاربری ندارید؟</span>
