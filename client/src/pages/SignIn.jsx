@@ -18,7 +18,7 @@ export default function SignUp() {
   // const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // console.log(formData)
+  console.log(formData)
 
   // ==============================================================After adding redux tookit
   const {loading,errorMessage}=useSelector((state)=>state.user)

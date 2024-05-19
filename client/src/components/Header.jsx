@@ -13,7 +13,7 @@ export default function Header() {
   const dispatch=useDispatch()
   const {theme}=useSelector((state)=>state.theme)
   const {currentUser}=useSelector((state)=>state.user)
-  console.log(currentUser)
+  // console.log(currentUser)
   return (
     <Navbar className='border-b-2'>
       <Link
