@@ -1,6 +1,6 @@
 import { Alert, Button, TextInput } from 'flowbite-react';
 import { useEffect, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   getDownloadURL,
   getStorage,
@@ -11,15 +11,24 @@ import { app } from "../firebase"
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 
+import { uploadStart,uploadSuccess,uploadFailure } from '../redux/user/userSlicer';
+
 export default function DashProfile() {
   const { currentUser } = useSelector((state) => state.user);
-  console.log(currentUser)
+  const dispatch=useDispatch()
+  // console.log(currentUser)
   const [imageFile, setImageFile] = useState(null);
   const [imageFileUrl, setImageFileUrl] = useState(null);
   const [imageFileUploadProgress, setImageFileUploadProgress] = useState(null);
   const [imageFileUploadError, setImageFileUploadError] = useState(null);
-  const [formData, setFormData] = useState({});
+  const [imageFileUploading,setImageFileUploading]=useState(false)
   const filePickerRef = useRef();
+  // =============================================
+  const [formData, setFormData] = useState({});
+  const [updateUserError,setUpdateUserError]=useState(null)
+  const [uploadUserSuccess,setUploadUserSuccess]=useState(false)
+
+  // console.log(formData)
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -48,6 +57,7 @@ export default function DashProfile() {
 
         setImageFileUploadProgress(progress.toFixed(0));
       },
+      // eslint-disable-next-line no-unused-vars
       (error) => {
         setImageFileUploadError(
           'Could not upload image (File must be less than 2MB)'
@@ -60,16 +70,58 @@ export default function DashProfile() {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
           setImageFileUrl(downloadURL);
           setFormData({ ...formData, profilePicture: downloadURL });
+          setImageFileUploading(false)
+
         });
       }
     );
   };
 
- 
+  // ================================ handle input change 
+  const handleChange=(e)=>{
+    setFormData({...formData,[e.target.id]:e.target.value})
+  }
+
+
+  const  handleSubmit= async(e)=>{
+    e.preventDefault();
+    setUpdateUserError(null)
+    if(Object.keys(formData).length===0){
+      setUpdateUserError("چیری برای تغییر وارید نشده")
+      return
+    }
+    if(!imageFileUploading){
+      setImageFileUploadError("لطفاتاکامل شدن آپلود صبرکنید")
+    }
+    try{
+      dispatch(uploadStart())
+      const res=await fetch(`/api/user/update/${currentUser._id}`,{
+        method:"PUT",
+        headers:{
+          'content-type':'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+      const data= await res.json()
+
+      if(!res.ok){
+        dispatch(uploadFailure(data.message))
+        setUpdateUserError(data.message)
+      }else{
+        dispatch(uploadSuccess(data))
+        setUploadUserSuccess("تغییرات موفقانه انجام شد")
+      }
+
+    }catch(err){
+      dispatch(uploadFailure(err))
+      setUpdateUserError(err.message)
+    }
+  }
+  
   return (
     <div className='max-w-lg mx-auto p-3 w-full'>
       <h1 className='my-7 text-center font-semibold text-3xl'>پروفایل</h1>
-      <form className='flex flex-col gap-4'>
+      <form className='flex flex-col gap-4' onSubmit={handleSubmit}>
         <input
           type='file'
           accept='image/*'
@@ -120,20 +172,20 @@ export default function DashProfile() {
           id='username'
           placeholder='username'
           defaultValue={currentUser.username}
-          // onChange={handleChange}
+          onChange={handleChange}
         />
         <TextInput
           type='email'
           id='email'
           placeholder='email'
           defaultValue={currentUser.email}
-          // onChange={handleChange}
+          onChange={handleChange}
         />
         <TextInput
           type='password'
           id='password'
           placeholder='password'
-          // onChange={handleChange}
+          onChange={handleChange}
         />
         <Button
           type='submit'
@@ -152,6 +204,12 @@ export default function DashProfile() {
           خارج شدن
         </span>
       </div>
+      {updateUserError &&(
+        <Alert color="failure" className='mt-5'>{updateUserError}</Alert>
+      )}
+      {uploadUserSuccess && (
+        <Alert color="success" className='mt-5'>{uploadUserSuccess}</Alert>
+      )}
     </div>
   );
 }

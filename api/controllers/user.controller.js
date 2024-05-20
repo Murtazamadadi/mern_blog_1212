@@ -55,3 +55,18 @@ try {
     next(error);
 }
 };
+
+// ================================= Delete user ==================
+export const deleteUser= async(req,res,next)=>{
+    if(req.user.id!==req.params.userId){
+        return next(401,"شمااجازه ندارید این حساب کابری باحذف کنید")   
+    }
+
+    try{
+        await User.findByIdAndDelete(req.params.id)
+        res.status(200).json("کاربرموفقانه حذف شد")
+    }catch(error){
+        console.log(error)
+        return next(error)
+    }
+}
